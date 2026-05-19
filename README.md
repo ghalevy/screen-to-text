@@ -1,10 +1,10 @@
 # ScreenToText
 
 Tiny macOS background daemon. Hit **⌘⇧9**, drag a region, the text from that
-region lands in your clipboard. Powered by Apple's on-device Vision OCR — no
-network, no API keys, no third-party libraries.
+region lands in your clipboard. Powered by Apple's on-device
+[Vision][vision] OCR — no network, no API keys, no third-party libraries.
 
-~110 lines of Swift. ~90 KB compiled.
+~110 lines of [Swift][swift]. ~90 KB compiled.
 
 > 🎬 **Demo:** _coming soon — record with the recipe below._
 
@@ -28,23 +28,25 @@ Once docs/demo.gif exists, delete the "coming soon" blockquote above.
 
 Every browser/PDF/screenshot tool reinvents "copy text from this thing", and
 half of them route the image through a cloud service. macOS already ships with
-a high-quality OCR engine (`VNRecognizeTextRequest`); this just wires a global
-hotkey to it.
+a high-quality OCR engine ([`VNRecognizeTextRequest`][vnrecognize]); this just
+wires a global hotkey to it.
 
 ## How it works
 
-| Stage             | Mechanism                                                |
-|-------------------|----------------------------------------------------------|
-| Global hotkey     | Carbon `RegisterEventHotKey` (no Accessibility prompt)   |
-| Region capture    | `/usr/sbin/screencapture -i -x -t png`                   |
-| OCR               | Vision framework — `.accurate`, language correction on   |
-| Clipboard         | `NSPasteboard.general`                                   |
-| Notification      | `osascript -e 'display notification ...'`                |
-| Persistence       | LaunchAgent — `RunAtLoad` + `KeepAlive`                  |
+| Stage             | Mechanism                                                                                                                          |
+|-------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| Global hotkey     | [`RegisterEventHotKey`][regevent] ([Carbon][carbon]) — no [Accessibility][accessibility] prompt                                    |
+| Region capture    | [`screencapture(1)`][screencapture] — `-i -x -t png`                                                                               |
+| OCR               | [Vision][vision] — [`VNRecognizeTextRequest`][vnrecognize] with [`.accurate`][reclevel] + [`usesLanguageCorrection`][langcorrect]   |
+| Clipboard         | [`NSPasteboard.general`][pasteboard]                                                                                               |
+| Notification      | [`osascript`][osascript] → [`display notification`][displaynotification]                                                           |
+| Persistence       | [LaunchAgent][launchd] — [`RunAtLoad`][launchdkeys] + [`KeepAlive`][launchdkeys]                                                   |
 
-The binary is `LSUIElement`-style (`.accessory` activation policy): no Dock
-icon, no Cmd-Tab entry, no menu bar item. It just sits there waiting for the
-hotkey.
+The binary is [`LSUIElement`][lsuielement]-style ([`.accessory`][accessorypolicy]
+activation policy): no Dock icon, no Cmd-Tab entry, no menu bar item. It just
+sits there waiting for the hotkey.
+
+See the full source in [`main.swift`](main.swift) (~110 lines).
 
 ## Install
 
@@ -54,12 +56,14 @@ cd screen-to-text
 make install
 ```
 
-That builds `screentotext`, copies it to `~/Applications/ScreenToText/`,
-writes a LaunchAgent at `~/Library/LaunchAgents/com.$USER.screentotext.plist`,
-and loads it. It will auto-start on login forever after.
+That builds [`screentotext`](main.swift), copies it to `~/Applications/ScreenToText/`,
+writes a [LaunchAgent][launchd] at `~/Library/LaunchAgents/com.$USER.screentotext.plist`,
+and loads it via [`launchctl bootstrap`][launchctl]. It will auto-start on
+login forever after.
 
-First time you press **⌘⇧9**, macOS will prompt once for **Screen Recording**
-permission. Grant it; that's the only manual step.
+First time you press **⌘⇧9**, macOS will prompt once for
+[Screen Recording][screenrecording] permission. Grant it; that's the only
+manual step.
 
 ## Use
 
@@ -82,25 +86,31 @@ make load        # (re)load LaunchAgent
 make unload      # stop daemon
 ```
 
+See [`Makefile`](Makefile) for the underlying [`launchctl`][launchctl] and
+[`swiftc`][swiftc] invocations.
+
 ## Change the hotkey
 
-Edit `main.swift`:
+Edit [`main.swift`](main.swift):
 
 ```swift
 let keyCode: UInt32 = 25                          // kVK_ANSI_9
 let modifiers: UInt32 = UInt32(cmdKey | shiftKey) // ⌘⇧
 ```
 
-Swap in any [kVK_ key constant](https://developer.apple.com/documentation/coregraphics/cgkeycode)
-and any combination of `cmdKey | shiftKey | optionKey | controlKey`, then
+Swap in any [`kVK_` key constant][kvk] and any combination of
+[`cmdKey`][cmdkey] `|` `shiftKey` `|` `optionKey` `|` `controlKey`, then
 `make reinstall`.
 
 ## Requirements
 
-- macOS 11+ (Big Sur or later — for the modern `VNRecognizeTextRequest` API)
-- Xcode Command Line Tools (`xcode-select --install`) — provides `swiftc`
+- [macOS][macos] 11+ (Big Sur or later — for the modern
+  [`VNRecognizeTextRequest`][vnrecognize] API)
+- [Xcode Command Line Tools][clt] (`xcode-select --install`) — provides
+  [`swiftc`][swiftc]
 
-No Homebrew, no Xcode app, no SwiftPM, no signing certificate needed.
+No [Homebrew][brew], no [Xcode][xcode] app, no [SwiftPM][swiftpm], no
+[signing certificate][codesign] needed.
 
 ## Files
 
@@ -109,8 +119,50 @@ main.swift   # the whole program
 Makefile     # build + LaunchAgent management
 ```
 
-That's it. Two files.
+That's it. Two files. See [`main.swift`](main.swift) and [`Makefile`](Makefile).
 
 ## License
 
-MIT — see `LICENSE`.
+[MIT](LICENSE) — see [`LICENSE`](LICENSE).
+
+---
+
+### Reading list
+
+- [Apple — Vision framework][vision]
+- [Apple — `VNRecognizeTextRequest`][vnrecognize]
+- [Apple — Carbon `RegisterEventHotKey`][regevent]
+- [Apple — `NSPasteboard`][pasteboard]
+- [Apple — `LSUIElement` Info.plist key][lsuielement]
+- [Apple — `launchd.plist(5)`][launchdplist]
+- [Apple — Screen Recording privacy][screenrecording]
+
+<!-- link references -->
+[vision]: https://developer.apple.com/documentation/vision
+[vnrecognize]: https://developer.apple.com/documentation/vision/vnrecognizetextrequest
+[reclevel]: https://developer.apple.com/documentation/vision/vnrequesttextrecognitionlevel/accurate
+[langcorrect]: https://developer.apple.com/documentation/vision/vnrecognizetextrequest/3152641-useslanguagecorrection
+[regevent]: https://developer.apple.com/documentation/coreservices/1446989-registereventhotkey
+[carbon]: https://developer.apple.com/library/archive/documentation/Carbon/Reference/Carbon_Event_Manager_Ref/index.html
+[accessibility]: https://support.apple.com/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac
+[screencapture]: https://ss64.com/mac/screencapture.html
+[pasteboard]: https://developer.apple.com/documentation/appkit/nspasteboard
+[osascript]: https://ss64.com/mac/osascript.html
+[displaynotification]: https://developer.apple.com/library/archive/documentation/LanguagesUtilities/Conceptual/MacAutomationScriptingGuide/DisplayNotifications.html
+[launchd]: https://www.launchd.info/
+[launchdplist]: https://www.manpagez.com/man/5/launchd.plist/
+[launchdkeys]: https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html
+[launchctl]: https://ss64.com/mac/launchctl.html
+[lsuielement]: https://developer.apple.com/documentation/bundleresources/information_property_list/lsuielement
+[accessorypolicy]: https://developer.apple.com/documentation/appkit/nsapplication/activationpolicy/accessory
+[screenrecording]: https://support.apple.com/guide/mac-help/control-access-to-screen-recording-on-mac-mchld6aa7d23/mac
+[swift]: https://www.swift.org/
+[swiftc]: https://www.swift.org/documentation/articles/swiftc.html
+[macos]: https://www.apple.com/macos/
+[clt]: https://developer.apple.com/xcode/resources/
+[xcode]: https://developer.apple.com/xcode/
+[swiftpm]: https://www.swift.org/package-manager/
+[codesign]: https://developer.apple.com/documentation/security/code_signing_services
+[brew]: https://brew.sh/
+[kvk]: https://eastmanreference.com/complete-list-of-applescript-key-codes
+[cmdkey]: https://developer.apple.com/documentation/coreservices/cmdkey
