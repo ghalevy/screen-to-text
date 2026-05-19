@@ -125,6 +125,13 @@ That's it. Two files. See [`main.swift`](main.swift) and [`Makefile`](Makefile).
 
 [MIT](LICENSE) — see [`LICENSE`](LICENSE).
 
+## Credits
+
+🌀 Designed, written, compiled, installed, and documented end-to-end by
+[**Wibey CLI**][wibey] in a single session — from "I want a screenshot-to-text
+hotkey" to a running [`launchd`][launchd] daemon, plus this README. Zero
+manual edits.
+
 ---
 
 ### Reading list
@@ -166,3 +173,4 @@ That's it. Two files. See [`main.swift`](main.swift) and [`Makefile`](Makefile).
 [brew]: https://brew.sh/
 [kvk]: https://eastmanreference.com/complete-list-of-applescript-key-codes
 [cmdkey]: https://developer.apple.com/documentation/coreservices/cmdkey
+[wibey]: https://wibey.walmart.com/cli
