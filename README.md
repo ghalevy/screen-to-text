@@ -6,6 +6,24 @@ network, no API keys, no third-party libraries.
 
 ~110 lines of Swift. ~90 KB compiled.
 
+> 🎬 **Demo:** _coming soon — record with the recipe below._
+
+![demo placeholder](docs/demo.gif)
+
+<!--
+TODO: capture docs/demo.gif (record at ~12 fps, ≤ 5 s, < 2 MB)
+  1. Show any window with text on screen.
+  2. Press ⌘⇧9 — crosshair appears.
+  3. Drag over a paragraph.
+  4. Notification flashes "ScreenToText — copied · <preview>".
+  5. Cmd-Tab into a text editor and ⌘V — text pastes.
+Capture:  screencapture -v -V 5 -t mov demo.mov
+Convert:  mkdir -p docs && ffmpeg -i demo.mov \
+            -vf "fps=12,scale=720:-1:flags=lanczos" -loop 0 docs/demo.gif
+Once docs/demo.gif exists, delete the "coming soon" blockquote above.
+-->
+
+
 ## Why
 
 Every browser/PDF/screenshot tool reinvents "copy text from this thing", and
