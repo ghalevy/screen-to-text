@@ -1,5 +1,7 @@
 # ScreenToText
 
+📦 **Repo:** <https://github.com/ghalevy/screen-to-text>
+
 Tiny macOS background daemon. Hit **⌘⇧9**, drag a region, the text from that
 region lands in your clipboard. Powered by Apple's on-device
 [Vision][vision] OCR — no network, no API keys, no third-party libraries.
@@ -51,7 +53,7 @@ See the full source in [`main.swift`](main.swift) (~110 lines).
 ## Install
 
 ```bash
-git clone https://github.com/<you>/screen-to-text.git
+git clone https://github.com/ghalevy/screen-to-text.git
 cd screen-to-text
 make install
 ```
