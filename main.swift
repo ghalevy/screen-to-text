@@ -50,6 +50,11 @@ func captureAndOCR() {
     p.arguments = ["-i", "-x", "-t", "png", tmp]
     do { try p.run() } catch { return }
     p.waitUntilExit()
+    // Non-zero exit usually means Screen Recording permission is missing.
+    if p.terminationStatus != 0 {
+        notify("ScreenToText", "Capture failed. Grant Screen Recording in System Settings > Privacy & Security.")
+        return
+    }
     // User cancelled (Esc) → no file written.
     guard FileManager.default.fileExists(atPath: tmp) else { return }
     runOCR(on: url) { text in
@@ -85,7 +90,7 @@ func registerHotKey() {
                                   eventKind: UInt32(kEventHotKeyPressed))
     InstallEventHandler(GetApplicationEventTarget(), hotKeyCallback, 1, &eventType, nil, nil)
 
-    var hkID = EventHotKeyID(signature: OSType(0x53_43_54_58 /* 'SCTX' */), id: 1)
+    let hkID = EventHotKeyID(signature: OSType(0x53_43_54_58 /* 'SCTX' */), id: 1)
     // kVK_ANSI_9 = 25, modifiers = cmd + shift
     let keyCode: UInt32 = 25
     let modifiers: UInt32 = UInt32(cmdKey | shiftKey)
@@ -101,5 +106,10 @@ func registerHotKey() {
 
 // Hide from Dock + Cmd-Tab. LSUIElement equivalent for a CLI-launched binary.
 NSApplication.shared.setActivationPolicy(.accessory)
+// screencapture inherits this process's TCC identity, so the daemon itself needs
+// Screen Recording. Requesting it adds us to the list in System Settings.
+if !CGPreflightScreenCaptureAccess() {
+    CGRequestScreenCaptureAccess()
+}
 registerHotKey()
 NSApplication.shared.run()

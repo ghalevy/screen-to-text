@@ -6,7 +6,7 @@ Tiny macOS background daemon. Hit **⌘⇧9**, drag a region, the text from that
 region lands in your clipboard. Powered by Apple's on-device
 [Vision][vision] OCR — no network, no API keys, no third-party libraries.
 
-~110 lines of [Swift][swift]. ~90 KB compiled.
+~115 lines of [Swift][swift]. ~90 KB compiled.
 
 > 🎬 **Demo:** _coming soon — record with the recipe below._
 
@@ -48,7 +48,7 @@ The binary is [`LSUIElement`][lsuielement]-style ([`.accessory`][accessorypolicy
 activation policy): no Dock icon, no Cmd-Tab entry, no menu bar item. It just
 sits there waiting for the hotkey.
 
-See the full source in [`main.swift`](main.swift) (~110 lines).
+See the full source in [`main.swift`](main.swift) (~115 lines).
 
 ## Install
 
@@ -63,9 +63,26 @@ writes a [LaunchAgent][launchd] at `~/Library/LaunchAgents/com.$USER.screentotex
 and loads it via [`launchctl bootstrap`][launchctl]. It will auto-start on
 login forever after.
 
-First time you press **⌘⇧9**, macOS will prompt once for
-[Screen Recording][screenrecording] permission. Grant it; that's the only
-manual step.
+On first launch the daemon asks macOS for
+[Screen Recording][screenrecording] permission, so a prompt appears and
+`screentotext` shows up in **System Settings → Privacy & Security → Screen &
+System Audio Recording**. Turn it on, then restart the daemon so it picks up
+the permission:
+
+```bash
+make load
+```
+
+That's the only manual step. If a capture ever fails, a notification tells
+you the permission is missing.
+
+### Troubleshooting: the toggle is on but capture still fails
+
+macOS ties the permission to the binary's code signature. If the signature
+changes (see [Signing](#signing)), the old entry no longer matches even though
+its toggle still looks enabled. Fix it by selecting `screentotext` in the list,
+clicking **−**, running `make load`, turning the new entry on, and running
+`make load` once more.
 
 ## Use
 
@@ -113,6 +130,26 @@ Swap in any [`kVK_` key constant][kvk] and any combination of
 
 No [Homebrew][brew], no [Xcode][xcode] app, no [SwiftPM][swiftpm], no
 [signing certificate][codesign] needed.
+
+## Signing
+
+`make build` signs the binary with the first **Apple Development** or
+**Developer ID Application** certificate in your keychain, using the stable
+identifier `com.$USER.screentotext`. With a real certificate, the Screen
+Recording permission survives `make reinstall`.
+
+Without one, the build falls back to an ad-hoc signature. That works, but an
+ad-hoc signature changes on every rebuild, so you'll need to re-grant the
+permission after each `make reinstall` (see the troubleshooting steps above).
+
+Pick a specific identity, or force ad-hoc signing:
+
+```bash
+make reinstall SIGN_ID="Apple Development: Your Name (TEAMID)"
+make reinstall SIGN_ID=-
+```
+
+List your identities with `security find-identity -p codesigning -v`.
 
 ## Files
 

@@ -7,6 +7,12 @@ LABEL        = com.$(USER).screentotext
 PLIST        = $(HOME)/Library/LaunchAgents/$(LABEL).plist
 SWIFTC      ?= /usr/bin/swiftc
 SWIFTFLAGS   = -O -framework AppKit -framework Carbon -framework Vision
+# Signing identity. Ad-hoc ("-") signatures change on every rebuild, which makes
+# macOS forget the Screen Recording permission. A real certificate keeps it stable.
+SIGN_ID     ?= $(shell security find-identity -p codesigning -v 2>/dev/null | awk -F'"' '/Apple Development|Developer ID Application/ {print $$2; exit}')
+ifeq ($(SIGN_ID),)
+SIGN_ID      = -
+endif
 
 .PHONY: all build install load unload uninstall clean reinstall status
 
@@ -16,6 +22,7 @@ build: $(BIN)
 
 $(BIN): $(SRC)
 	$(SWIFTC) $(SWIFTFLAGS) -o $(BIN) $(SRC)
+	codesign --force --sign "$(SIGN_ID)" --identifier $(LABEL) $(BIN)
 
 install: build
 	mkdir -p $(PREFIX)
